@@ -22,3 +22,4 @@ indicating a potential brute force login attempt.
 ### MITRE ATT&CK
 - T1110 – Brute Force
 
+![Brute Force Alert](../screenshots/brute-force-alert.png)
