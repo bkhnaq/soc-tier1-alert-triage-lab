@@ -72,7 +72,7 @@ The lab is built on a **Wazuh All-in-One deployment** hosted on an Ubuntu Server
 ---
 
 ## 👤 Author
-**Khang Bao (Elon)**
+**Khang Bao (bkhnaq)**
 * **Role:** Aspiring SOC Analyst / 3rd Year IT Student
 * **Interests:** Cybersecurity, SIEM/EDR, Malware Analysis
 * **Contact:** lebaokhang22092005@gmail.com
