@@ -1,117 +1,72 @@
-# Incident Response Playbook – Suspicious PowerShell Activity
+# Incident Response Playbook: Suspicious PowerShell Activity
 
-## Alert Information
-- Detection Tool: Wazuh
-- Rule ID: 61613
-- Rule Level: Medium
-- MITRE ATT&CK: T1059.001 – PowerShell
-- Affected Host: DESKTOP-JT7B9UV (Windows 10)
-- User: Local User
-- Process: powershell.exe
-
----
-
-## Alert Description
-This alert is triggered when PowerShell is executed on a Windows host.
-Attackers often abuse PowerShell for malicious activities such as
-payload execution, lateral movement, or persistence.
-
-This alert may indicate suspicious PowerShell usage depending on
-the execution context and command line.
+## 1. Alert Information
+* **Detection Tool:** Wazuh SIEM
+* **Rule ID:** 61603 / 61613 (Level 12 - High)
+* **MITRE ATT&CK Mapping:** [T1059.001 – PowerShell](https://attack.mitre.org/techniques/T1059/001/)
+* **Target Host:** `DESKTOP-JT7B9UV` (Windows 10)
+* **Process:** `powershell.exe`
+* **Log Source:** Windows Security Event Log (Event ID 4688)
 
 ---
 
-## Initial Triage (Tier 1 Analysis)
-
-### 1. Verify Alert Authenticity
-- Confirm the alert source is Wazuh
-- Verify the process name is `powershell.exe`
-- Check event timestamp and affected host
-
-### 2. Review Event Details
-- Parent Process Name
-- Command Line Arguments (if available)
-- User Account executing PowerShell
-- Logon Type and Privilege Level
+## 2. Initial Triage (Tier 1 Analysis)
+### 2.1. Rule Validation
+* **Process Verification:** Confirm the process is indeed `powershell.exe` and not a masqueraded binary (e.g., `powerrshell.exe`).
+* **Timestamp Check:** Verify if the execution occurred during non-business hours or follows a suspicious login.
+* **Privilege Level:** Check if the process was started with **Elevated Privileges** (Token Elevation Type).
 
 ---
 
-## Investigation Steps
+## 3. Investigation Steps
+### 3.1. Command Line Analysis (Critical)
+Analyze the command line for obfuscation or malicious intent:
+* **Suspicious Flags:** * `-EncodedCommand` or `-e`: Used to hide script logic.
+    * `-ExecutionPolicy Bypass`: Used to run restricted scripts.
+    * `-WindowStyle Hidden` or `-w hidden`: Stealth execution.
+    * `-NoProfile`: Skips user profile scripts to evade detection.
+* **Download Cradles:** Search for strings like `IEX`, `Invoke-Expression`, `WebClient`, or `DownloadString`.
 
-### 1. Check PowerShell Command Line
-- Look for suspicious flags:
-  - `-EncodedCommand`
-  - `-ExecutionPolicy Bypass`
-  - `-NoProfile`
-- Identify encoded or obfuscated commands
+### 3.2. Parent Process Tree Analysis
+Determine the origin of the execution:
+* **Low Risk:** `explorer.exe`, `services.exe` (if verified admin activity).
+* **Medium Risk:** `cmd.exe`, `taskeng.exe`.
+* **High Risk:** `winword.exe`, `excel.exe`, `outlook.exe` (Potential Phishing/Macro).
+* **Critical Risk:** `sqlservr.exe`, `w3wp.exe` (Web Shell / Database compromise).
 
-### 2. Identify Parent Process
-- Verify if PowerShell was launched by:
-  - explorer.exe (usually benign)
-  - winword.exe / excel.exe (potentially malicious)
-  - cmd.exe / services.exe
-
-### 3. Check User Behavior
-- Is the user an admin?
-- Is PowerShell commonly used by this user?
-- Was the activity interactive or automated?
-
-### 4. Correlate with Other Alerts
-- Multiple PowerShell executions in a short time
-- Related alerts:
-  - Brute Force
-  - Privilege Escalation
-  - Suspicious Process Creation
+### 3.3. Network Correlation
+* Check for active network connections from the PowerShell PID to external/unknown IPs.
+* Verify DNS queries for suspicious domains initiated by the script.
 
 ---
 
-## Evidence Collected
-- Windows Event ID: 4688 (Process Creation)
-- Process Name: powershell.exe
-- Parent Process: explorer.exe
-- Host: DESKTOP-JT7B9UV
+## 4. Response Actions
 
-![PowerShell Alert Evidence](../screenshots/suspicious-powershell-after-success-login.png)
-![PowerShell Alert Evidence](../screenshots/powershell-event-detail.png)
+### Scenario A: Confirmed Malicious (True Positive)
+1. **Host Isolation:** Immediately isolate the endpoint via Wazuh Active Response to block Command & Control (C2) communication.
+2. **Process Termination:** Kill the malicious `powershell.exe` PID and its parent process.
+3. **Forensic Collection:** Capture a memory dump of the PowerShell process for Tier 2 analysis.
+4. **Account Lockdown:** Disable the user account involved if it shows signs of compromise.
 
-
----
-
-## Assessment
-- Severity: Medium
-- Confidence: Low to Medium
-- Classification: Suspicious Activity
-
-This activity appears to be **benign administrative usage**  
-OR  
-**potential early-stage attack behavior** (depending on command line).
+### Scenario B: Authorized Admin Activity (False Positive)
+1. **Verification:** Confirm with the IT/Admin team if the script is part of a scheduled task or legitimate maintenance.
+2. **Whitelisting:** If the activity is recurring and safe, suggest tuning the Wazuh rule to exclude this specific authorized command.
 
 ---
 
-## Response Actions
-
-### If Benign
-- Close alert as **False Positive**
-- Document user activity
-- No further action required
-
-### If Malicious
-- Isolate the affected host
-- Disable compromised user account
-- Block malicious PowerShell scripts
-- Escalate to Tier 2 SOC
+## 5. Escalation Criteria
+Escalate to **Tier 2** if:
+* The command line contains an **EncodedCommand** that requires decoding.
+* The parent process is a web server or an MS Office application.
+* Evidence of **Lateral Movement** (PowerShell Remoting/WinRM) is detected.
+* Persistence mechanisms (Scheduled Tasks/Registry Keys) were created.
 
 ---
 
-## Recommendations
-- Enable PowerShell Script Block Logging
-- Monitor PowerShell execution frequency
-- Apply least privilege principles
-- User awareness training
+## 6. Recommendations & Mitigation
+* **Logging:** Ensure **PowerShell Script Block Logging (Event ID 4104)** is enabled via GPO for full visibility.
+* **Constrained Language Mode:** Implement PowerShell Constrained Language Mode where possible.
+* **AppLocker:** Use AppLocker or Windows Defender Application Control (WDAC) to restrict PowerShell access to authorized users only.
 
 ---
-
-## Status
-- Alert Status: Closed
-- Analyst: SOC Tier 1
-- Date: 2026-02-06
+**Analyst:** Khang Bao (Elon) | **Department:** SOC Tier 1 | **Status:** Escalated to Tier 2 – Pending Deep Analysis
