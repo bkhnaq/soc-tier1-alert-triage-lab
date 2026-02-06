@@ -55,6 +55,7 @@ This alert was triggered by a high volume of failed logon attempts (Event ID 462
 * **Logon Type:** Local authentication (Logon Type 2 - Interactive).
 * **Source Attribution:** Source IP is not available as the attempts were initiated locally on the host.
 * **Success Correlation:** Checked for **Event ID 4624** (Successful Logon) immediately following the failures; **No success observed**.
+![Brute Force Alert](../screenshots/brute-force-alert.png)
 
 ## 4. Analyst Assessment
 * **Status:** <span style="color:orange">**Suspected Brute Force Attempt**</span>.
