@@ -22,4 +22,11 @@ indicating a potential brute force login attempt.
 ### MITRE ATT&CK
 - T1110 – Brute Force
 
+### Analyst Assessment
+This alert is classified as a suspected brute force login attempt based on repeated
+failed authentication events on a single Windows host within a short time window.
+
+No successful login was observed following the failed attempts.
+Further monitoring is recommended.
+
 ![Brute Force Alert](../screenshots/brute-force-alert.png)
