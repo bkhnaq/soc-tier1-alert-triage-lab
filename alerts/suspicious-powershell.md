@@ -17,4 +17,4 @@ such as EncodedCommand or ExecutionPolicy Bypass.
 
 ### MITRE ATT&CK
 - T1059.001 – PowerShell
-![Suspicious Powershell](screenshots/suspicious-powershell-after-success-login.png)
+![Suspicious Powershell](../screenshots/suspicious-powershell-after-success-login.png)
