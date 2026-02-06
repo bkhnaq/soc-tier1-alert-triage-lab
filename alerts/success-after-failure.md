@@ -11,3 +11,5 @@ indicating possible credential compromise.
 
 ### MITRE ATT&CK
 - T1078 – Valid Accounts
+
+![Brute Force Alert](../screenshots/success-login.png)
